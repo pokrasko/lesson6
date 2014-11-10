@@ -27,8 +27,8 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public class FeedUpdater extends IntentService {
     private long feedId;
-    private String feedUrl;
     private String feedTitle;
+    private String feedDescription;
     private ResultReceiver receiver;
     private Uri feedUri;
     private Uri postsUri;
@@ -40,7 +40,9 @@ public class FeedUpdater extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         feedId = intent.getLongExtra("feed_id", -1);
-        feedUrl = intent.getStringExtra("url");
+        feedTitle = intent.getStringExtra("title");
+        feedDescription = intent.getStringExtra("description");
+        String feedUrl = intent.getStringExtra("url");
         receiver = intent.getParcelableExtra("receiver");
         String escapedFeedUrl = DatabaseUtils.sqlEscapeString(feedUrl);
 
@@ -62,14 +64,14 @@ public class FeedUpdater extends IntentService {
             values.put("description", "");
             values.put("url", feedUrl);
 
-            feedTitle = feedUrl;
             feedUri = getContentResolver().insert(FeedContentProvider.CONTENT_FEEDS_URI, values);
             feedId = Long.parseLong(feedUri.getLastPathSegment());
         } else {
             feedUri = Uri.withAppendedPath(FeedContentProvider.CONTENT_FEEDS_URI, "" + feedId);
-            Cursor cursor = getContentResolver().query(feedUri, new String[]{"title"}, null, null, null);
+            Cursor cursor = getContentResolver().query(feedUri, new String[]{"title", "description"}, null, null, null);
             cursor.moveToFirst();
             feedTitle = cursor.getString(cursor.getColumnIndexOrThrow("title"));
+            feedDescription = cursor.getString(cursor.getColumnIndexOrThrow("description"));
             cursor.close();
         }
 
@@ -139,6 +141,13 @@ public class FeedUpdater extends IntentService {
                 if (!newTitle.equals(feedTitle)) {
                     ContentValues values = new ContentValues();
                     values.put("title", newTitle);
+                    getContentResolver().update(feedUri, values, null, null);
+                }
+            } else if (localName.equals("description")) {
+                String newDescription = text.trim();
+                if (!newDescription.equals(feedDescription)) {
+                    ContentValues values = new ContentValues();
+                    values.put("description", newDescription);
                     getContentResolver().update(feedUri, values, null, null);
                 }
             }

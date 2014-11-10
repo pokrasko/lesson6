@@ -1,0 +1,10 @@
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.pokrasko.rssreader2.FeedActivity">
+    <item
+        android:id="@+id/add_feed"
+        android:title="@string/add_feed"
+        android:orderInCategory="100"
+        android:showAsAction="never" />
+</menu>
