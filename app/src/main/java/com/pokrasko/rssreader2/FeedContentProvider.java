@@ -24,14 +24,14 @@ public class FeedContentProvider extends ContentProvider {
     private static final String TITLE_FIELD = "title";
     private static final String DESCRIPTION_FIELD = "description";
     private static final String URL_FIELD = "url";
-    private static final String FEED_ID_FIELD = "feed_id";
+    public static final String FEED_ID_FIELD = "feed_id";
 
     private static final String AUTHORITY = "com.pokrasko.rssreader2";
     private static final String FEEDS_PATH = "feeds";
     private static final String POSTS_PATH = "posts";
-    private static final Uri CONTENT_FEEDS_URI = Uri.parse("content://" +
+    public static final Uri CONTENT_FEEDS_URI = Uri.parse("content://" +
         AUTHORITY + "/" + FEEDS_PATH);
-    private static final Uri CONTENT_POSTS_URI = Uri.parse("content://" +
+    public static final Uri CONTENT_POSTS_URI = Uri.parse("content://" +
         AUTHORITY + "/" + POSTS_PATH);
 
     private static final UriMatcher matcher = new UriMatcher(UriMatcher.NO_MATCH);
@@ -172,7 +172,7 @@ public class FeedContentProvider extends ContentProvider {
         return deletedRows;
     }
 
-    private final class FeedDBHelper extends SQLiteOpenHelper {
+    public class FeedDBHelper extends SQLiteOpenHelper {
         public FeedDBHelper(Context context) {
             super(context, DB_NAME, null, DB_VERSION);
         }
