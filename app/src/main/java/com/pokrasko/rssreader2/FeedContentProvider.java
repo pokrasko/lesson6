@@ -18,7 +18,6 @@ public class FeedContentProvider extends ContentProvider {
     private static final int FEEDS = 0;
     private static final int FEED_ID = 1;
     private static final int POSTS = 2;
-    private static final int POST_ID = 3;
 
     private static final String ID_FIELD = "id";
     private static final String TITLE_FIELD = "title";
@@ -39,7 +38,6 @@ public class FeedContentProvider extends ContentProvider {
         matcher.addURI(AUTHORITY, FEEDS_PATH, FEEDS);
         matcher.addURI(AUTHORITY, POSTS_PATH, POSTS);
         matcher.addURI(AUTHORITY, FEEDS_PATH + "/#", FEED_ID);
-        matcher.addURI(AUTHORITY, POSTS_PATH + "/#", POST_ID);
     }
 
     static String DB_NAME = "feeds.db";
@@ -68,8 +66,7 @@ public class FeedContentProvider extends ContentProvider {
             case FEEDS:
                 id = db.insert(FEEDS_TABLE, null, values);
                 break;
-            case FEED_ID:
-                values.put("feed_id", uri.getLastPathSegment());
+            case POSTS:
                 id = db.insert(POSTS_TABLE, null, values);
                 break;
             default:
@@ -112,27 +109,9 @@ public class FeedContentProvider extends ContentProvider {
 
         int updatedRows = 0;
         switch (uriType) {
-            case FEEDS:
-                updatedRows = db.update(FEEDS_TABLE, values, selection, selectionArgs);
-                break;
             case FEED_ID:
                 String feedId = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    updatedRows = db.update(FEEDS_TABLE, values, ID_FIELD + "=" + feedId, null);
-                } else {
-                    updatedRows = db.update(FEEDS_TABLE, values, ID_FIELD + "=" + feedId + " and " + selection, selectionArgs);
-                }
-                break;
-            case POSTS:
-                updatedRows = db.update(POSTS_TABLE, values, selection, selectionArgs);
-                break;
-            case POST_ID:
-                String postId = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    updatedRows = db.update(POSTS_TABLE, values, ID_FIELD + "=" + postId, null);
-                } else {
-                    updatedRows = db.update(POSTS_TABLE, values, ID_FIELD + "=" + postId + " and " + selection, selectionArgs);
-                }
+                updatedRows = db.update(FEEDS_TABLE, values, ID_FIELD + "=" + feedId, null);
                 break;
         }
         getContext().getContentResolver().notifyChange(uri, null);
@@ -145,27 +124,12 @@ public class FeedContentProvider extends ContentProvider {
 
         int deletedRows = 0;
         switch (uriType) {
-            case FEEDS:
-                deletedRows = db.delete(FEEDS_TABLE, selection, selectionArgs);
-                break;
             case FEED_ID:
                 String feedId = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    deletedRows = db.delete(FEEDS_TABLE, ID_FIELD + "=" + feedId, null);
-                } else {
-                    deletedRows = db.delete(FEEDS_TABLE, ID_FIELD + "=" + feedId + " and " + selection, selectionArgs);
-                }
+                deletedRows = db.delete(FEEDS_TABLE, ID_FIELD + "=" + feedId, null);
                 break;
             case POSTS:
                 deletedRows = db.delete(POSTS_TABLE, selection, selectionArgs);
-                break;
-            case POST_ID:
-                String postId = uri.getLastPathSegment();
-                if (TextUtils.isEmpty(selection)) {
-                    deletedRows = db.delete(POSTS_TABLE, ID_FIELD + "=" + postId, null);
-                } else {
-                    deletedRows = db.delete(POSTS_TABLE, ID_FIELD + "=" + postId + " and " + selection, selectionArgs);
-                }
                 break;
         }
         getContext().getContentResolver().notifyChange(uri, null);

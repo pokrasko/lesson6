@@ -31,7 +31,6 @@ public class FeedUpdater extends IntentService {
     private String feedDescription;
     private ResultReceiver receiver;
     private Uri feedUri;
-    private Uri postsUri;
 
     public static boolean running = false;
 
@@ -84,8 +83,6 @@ public class FeedUpdater extends IntentService {
             cursor.close();
         }
 
-        postsUri = FeedContentProvider.CONTENT_POSTS_URI;
-
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser parser = factory.newSAXParser();
@@ -124,7 +121,7 @@ public class FeedUpdater extends IntentService {
 
         @Override
         public void startDocument() {
-            getContentResolver().delete(postsUri, FeedContentProvider.FEED_ID_FIELD + "=" + feedId, null);
+            getContentResolver().delete(FeedContentProvider.CONTENT_POSTS_URI, FeedContentProvider.FEED_ID_FIELD + "=" + feedId, null);
         }
 
         @Override
@@ -150,7 +147,7 @@ public class FeedUpdater extends IntentService {
                     currentValues.put("url", text);
                 } else if (localName.equals("item") || localName.equals("entry")) {
                     currentValues.put("feed_id", feedId);
-                    getContentResolver().insert(postsUri, currentValues);
+                    getContentResolver().insert(FeedContentProvider.CONTENT_POSTS_URI, currentValues);
                     currentValues = null;
                 }
             } else if (localName.equals("title")) {
