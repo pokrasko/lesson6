@@ -111,7 +111,7 @@ public class FeedUpdater extends IntentService {
 
     @Override
     public void onDestroy() {
-        running = true;
+        running = false;
         super.onDestroy();
     }
 
