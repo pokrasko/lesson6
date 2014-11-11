@@ -39,8 +39,11 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
         dialog = createDialog();
 
+
         listView = (ListView) findViewById(android.R.id.list);
         emptyView = (TextView) findViewById(R.id.noFeeds);
+
+        registerForContextMenu(listView);
 
         receiver = new FeedResultReceiver(new Handler(), this);
 
@@ -135,7 +138,7 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
-        menu.add(0, FEED_ADD_ID, 0, R.string.add_feed);
+        menu.add(0, FEED_ADD_ID, 0, R.string.delete_feed);
     }
 
     @Override
@@ -148,9 +151,8 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
             Uri uri = Uri.parse(FeedContentProvider.CONTENT_FEEDS_URI + "/" + feedId);
             getContentResolver().delete(uri, null, null);
             adapter.remove(acmi.position);
-            return false;
         }
-        return true;
+        return super.onContextItemSelected(item);
     }
 
 

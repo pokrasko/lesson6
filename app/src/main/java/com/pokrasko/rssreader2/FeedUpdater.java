@@ -8,7 +8,6 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ResultReceiver;
-import android.util.Log;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -16,8 +15,14 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -45,8 +50,6 @@ public class FeedUpdater extends IntentService {
 
         running = true;
 
-        Log.i("FeedUpdater", "started just now");
-
         feedId = intent.getLongExtra("feed_id", -1);
         feedDescription = intent.getStringExtra("description");
         feedTitle = intent.getStringExtra("title");
@@ -54,7 +57,6 @@ public class FeedUpdater extends IntentService {
         receiver = intent.getParcelableExtra("receiver");
 
         if (feedId == -1) {
-            Log.i("FeedUpdater", "feedId == -1");
             feedUrl = intent.getStringExtra("url");
             String escapedFeedUrl = DatabaseUtils.sqlEscapeString(feedUrl);
             Cursor cursor = getContentResolver().query(
@@ -76,7 +78,6 @@ public class FeedUpdater extends IntentService {
 
             feedTitle = feedUrl;
             feedUri = getContentResolver().insert(FeedContentProvider.CONTENT_FEEDS_URI, values);
-            Log.i("FeedUpdater", "feed inserted:" + feedUri.toString());
             feedId = Long.parseLong(feedUri.getLastPathSegment());
         } else {
             feedUri = Uri.withAppendedPath(FeedContentProvider.CONTENT_FEEDS_URI, "" + feedId);
@@ -88,16 +89,12 @@ public class FeedUpdater extends IntentService {
             cursor.close();
         }
 
-        Log.i("FeedUpdater", "start of parsing");
-
         try {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser parser = factory.newSAXParser();
-            XMLReader reader = parser.getXMLReader();
+            XMLReader reader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
             RSSHandler handler = new RSSHandler();
             reader.setContentHandler(handler);
-            InputSource source = new InputSource(new URL(feedUrl).openStream());
-            reader.parse(source);
+            InputStream stream = new ByteArrayInputStream(getXmlByUrl(feedUrl).getBytes());
+            reader.parse(new InputSource(stream));
 
             receiver.send(FeedResultReceiver.OK, Bundle.EMPTY);
         } catch (ParserConfigurationException e) {
@@ -107,6 +104,42 @@ public class FeedUpdater extends IntentService {
         } catch (IOException e) {
             ReportException(e.toString());
         }
+    }
+
+    private String getXmlByUrl(String url) throws IOException {
+        StringBuilder builder = new StringBuilder("");
+
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        connection.setRequestMethod("GET");
+        connection.connect();
+
+        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+            InputStream stream = connection.getInputStream();
+
+            String contentType = connection.getContentType();
+            String[] values = contentType.split(";");
+            String encoding = "";
+
+            for (String value : values) {
+                value = value.trim();
+
+                if (value.toLowerCase().startsWith("charset=")) {
+                    encoding = value.substring("charset=".length());
+                }
+            }
+
+            if ("".equals(encoding)) {
+                encoding = connection.getContentEncoding() != null ? connection.getContentEncoding() : "utf-8";
+            }
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream, encoding));
+            String s;
+            while ((s = reader.readLine()) != null) {
+                builder.append(s);
+            }
+        }
+
+        return builder.toString();
     }
 
     @Override

@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -26,14 +25,10 @@ public class FeedResultReceiver extends ResultReceiver {
         String message = "You're fucking cheater";
         switch (code) {
             case OK:
-                Log.i("ResultReceiver", "heh, it's ok");
                 Class current = context.getClass();
-                Log.i("ResultReceiver", "class is " + current.toString());
                 if (current == FeedActivity.class) {
-                    Log.i("ResultReceiver", "you've got to FeedActivity");
                     ((FeedActivity) context).onUpdatedFeed();
                 } else if (current == PostActivity.class) {
-                    Log.i("ResultReceiver", "you've got to PostActivity");
                     ((PostActivity) context).onUpdatedFeed();
                 }
                 return;

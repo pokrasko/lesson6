@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.Loader;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -117,10 +116,8 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
 
     public void onRefresh() {
         if (FeedUpdater.running) {
-            Log.i("Refresh clicked", "FeedUpdater is running");
             return;
         }
-        Log.i("Refresh clicked", "FeedUpdater is not running");
         Intent intent = new Intent(this, FeedUpdater.class);
         intent.putExtra("feed_id", feedId);
         intent.putExtra("title", title);
