@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">RSS Reader 2</string>
+    <string name="change_feed">Change feed</string>
+    <string name="title_activity_feed">Select feed</string>
+    <string name="add_feed">Add feed</string>
+    <string name="refresh">Refresh</string>
+    <string name="OK">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="full_article">More...</string>
+
+</resources>

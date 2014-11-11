@@ -16,16 +16,6 @@ public class FeedAdapter extends BaseAdapter {
         this.list = list;
     }
 
-    public void add(Feed feed) {
-        list.add(feed);
-        notifyDataSetChanged();
-    }
-
-    public void remove(int i) {
-        list.remove(i);
-        notifyDataSetChanged();
-    }
-
     @Override
     public int getCount() {
         return list.size();
@@ -54,5 +44,15 @@ public class FeedAdapter extends BaseAdapter {
         description.setText(feed.getDescription());
 
         return view;
+    }
+
+    public void add(Feed feed) {
+        list.add(feed);
+        notifyDataSetChanged();
+    }
+
+    public void remove(int i) {
+        list.remove(i);
+        notifyDataSetChanged();
     }
 }

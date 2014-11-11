@@ -33,20 +33,27 @@ public class FeedUpdater extends IntentService {
     private Uri feedUri;
     private Uri postsUri;
 
+    public static boolean running = false;
+
     public FeedUpdater() {
         super("FeedUpdater");
     }
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        String feedUrl;
+
+        running = true;
+
         feedId = intent.getLongExtra("feed_id", -1);
-        feedTitle = intent.getStringExtra("title");
         feedDescription = intent.getStringExtra("description");
-        String feedUrl = intent.getStringExtra("url");
+        feedTitle = intent.getStringExtra("title");
+
         receiver = intent.getParcelableExtra("receiver");
-        String escapedFeedUrl = DatabaseUtils.sqlEscapeString(feedUrl);
 
         if (feedId == -1) {
+            feedUrl = intent.getStringExtra("url");
+            String escapedFeedUrl = DatabaseUtils.sqlEscapeString(feedUrl);
             Cursor cursor = getContentResolver().query(
                     FeedContentProvider.CONTENT_FEEDS_URI,
                     null,
@@ -64,14 +71,16 @@ public class FeedUpdater extends IntentService {
             values.put("description", "");
             values.put("url", feedUrl);
 
+            feedTitle = feedUrl;
             feedUri = getContentResolver().insert(FeedContentProvider.CONTENT_FEEDS_URI, values);
             feedId = Long.parseLong(feedUri.getLastPathSegment());
         } else {
             feedUri = Uri.withAppendedPath(FeedContentProvider.CONTENT_FEEDS_URI, "" + feedId);
-            Cursor cursor = getContentResolver().query(feedUri, new String[]{"title", "description"}, null, null, null);
+            Cursor cursor = getContentResolver().query(feedUri, new String[]{"title", "description", "url"}, null, null, null);
             cursor.moveToFirst();
             feedTitle = cursor.getString(cursor.getColumnIndexOrThrow("title"));
             feedDescription = cursor.getString(cursor.getColumnIndexOrThrow("description"));
+            feedUrl = cursor.getString(cursor.getColumnIndexOrThrow("url"));
             cursor.close();
         }
 
@@ -85,6 +94,8 @@ public class FeedUpdater extends IntentService {
             reader.setContentHandler(handler);
             InputSource source = new InputSource(new URL(feedUrl).openStream());
             reader.parse(source);
+
+
         } catch (ParserConfigurationException e) {
             ReportException(e.toString());
         } catch (SAXException e) {
@@ -92,6 +103,12 @@ public class FeedUpdater extends IntentService {
         } catch (IOException e) {
             ReportException(e.toString());
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        running = true;
+        super.onDestroy();
     }
 
     private void ReportException(String message) {

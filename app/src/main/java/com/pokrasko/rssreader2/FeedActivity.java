@@ -1,15 +1,12 @@
 package com.pokrasko.rssreader2;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.LoaderManager;
-import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,14 +20,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 
 public class FeedActivity extends ListActivity implements LoaderManager.LoaderCallbacks<FeedList> {
     ListView listView;
-    FeedAdapter adapter;
+    TextView emptyView;
     Dialog dialog;
+
+    private FeedAdapter adapter;
     private FeedResultReceiver receiver;
 
     public static final int FEED_ADD_ID = 1;
@@ -42,20 +40,28 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
         dialog = createDialog();
 
-        listView = (ListView) findViewById(R.id.listView);
+        listView = (ListView) findViewById(R.id.feedListView);
+        emptyView = (TextView) findViewById(R.id.noFeeds);
+
         receiver = new FeedResultReceiver(new Handler(), this);
 
+        listView.setVisibility(View.GONE);
+        emptyView.setVisibility(View.VISIBLE);
+
+        adapter = new FeedAdapter(new FeedList());
         setListAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Feed feed = (Feed) adapter.getItem(position);
+                long feedId = feed.getId();
                 String title = feed.getTitle();
                 String description = feed.getDescription();
                 String url = feed.getUrl();
 
-                Intent intent = new Intent(getBaseContext(), MainActivity.class);
+                Intent intent = new Intent(getBaseContext(), PostActivity.class);
+                intent.putExtra("feed_id", feedId);
                 intent.putExtra("title", title);
                 intent.putExtra("description", description);
                 intent.putExtra("url", url);
@@ -74,19 +80,28 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<FeedList> loader, FeedList list) {
+        if (adapter.getCount() == 0) {
+            listView.setVisibility(View.GONE);
+            emptyView.setVisibility(View.VISIBLE);
+        } else {
+            emptyView.setVisibility(View.GONE);
+            listView.setVisibility(View.VISIBLE);
+        }
         adapter = new FeedAdapter(list);
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
+        listView.setVisibility(View.GONE);
+        emptyView.setVisibility(View.VISIBLE);
         adapter = new FeedAdapter(new FeedList());
     }
 
 
     private void addFeed(String URL) {
         Intent intent = new Intent(this, FeedUpdater.class);
+        intent.putExtra("new_feed", true);
         intent.putExtra("url", URL);
-        intent.putExtra("feed_id", -1L);
         intent.putExtra("receiver", receiver);
         startService(intent);
     }
@@ -151,5 +166,10 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+
+    void onUpdatedFeed() {
+        getLoaderManager().initLoader(0, null, this);
     }
 }
