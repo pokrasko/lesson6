@@ -8,7 +8,6 @@ import android.database.Cursor;
  * Created by pokrasko on 10.11.14.
  */
 public class FeedLoader extends AsyncTaskLoader<FeedList> {
-    private static final String[] fullProjection = {"id", "title", "description", "url"};
 
     public FeedLoader(Context context) {
         super(context);
@@ -18,18 +17,30 @@ public class FeedLoader extends AsyncTaskLoader<FeedList> {
     public FeedList loadInBackground() {
         FeedList list = new FeedList();
         Cursor cursor = getContext().getContentResolver().query(FeedContentProvider.CONTENT_FEEDS_URI,
-                fullProjection, null, null, null);
+                null, null, null, null);
 
+        cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            long id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-            String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
-            String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-            String url = cursor.getString(cursor.getColumnIndexOrThrow("url"));
+            long id = cursor.getInt(0);
+            String title = cursor.getString(1);
+            String description = cursor.getString(2);
+            String url = cursor.getString(3);
             list.add(new Feed(id, title, description, url));
 
             cursor.moveToNext();
         }
+        cursor.close();
 
         return list;
+    }
+
+    @Override
+    protected void onStartLoading() {
+        forceLoad();
+    }
+
+    @Override
+    protected void onStopLoading() {
+        cancelLoad();
     }
 }

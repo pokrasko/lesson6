@@ -8,6 +8,7 @@ import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.ResultReceiver;
+import android.util.Log;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -44,6 +45,8 @@ public class FeedUpdater extends IntentService {
 
         running = true;
 
+        Log.i("FeedUpdater", "started just now");
+
         feedId = intent.getLongExtra("feed_id", -1);
         feedDescription = intent.getStringExtra("description");
         feedTitle = intent.getStringExtra("title");
@@ -51,6 +54,7 @@ public class FeedUpdater extends IntentService {
         receiver = intent.getParcelableExtra("receiver");
 
         if (feedId == -1) {
+            Log.i("FeedUpdater", "feedId == -1");
             feedUrl = intent.getStringExtra("url");
             String escapedFeedUrl = DatabaseUtils.sqlEscapeString(feedUrl);
             Cursor cursor = getContentResolver().query(
@@ -72,6 +76,7 @@ public class FeedUpdater extends IntentService {
 
             feedTitle = feedUrl;
             feedUri = getContentResolver().insert(FeedContentProvider.CONTENT_FEEDS_URI, values);
+            Log.i("FeedUpdater", "feed inserted:" + feedUri.toString());
             feedId = Long.parseLong(feedUri.getLastPathSegment());
         } else {
             feedUri = Uri.withAppendedPath(FeedContentProvider.CONTENT_FEEDS_URI, "" + feedId);
@@ -83,6 +88,8 @@ public class FeedUpdater extends IntentService {
             cursor.close();
         }
 
+        Log.i("FeedUpdater", "start of parsing");
+
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser parser = factory.newSAXParser();
@@ -92,7 +99,7 @@ public class FeedUpdater extends IntentService {
             InputSource source = new InputSource(new URL(feedUrl).openStream());
             reader.parse(source);
 
-
+            receiver.send(FeedResultReceiver.OK, Bundle.EMPTY);
         } catch (ParserConfigurationException e) {
             ReportException(e.toString());
         } catch (SAXException e) {
@@ -110,7 +117,7 @@ public class FeedUpdater extends IntentService {
 
     private void ReportException(String message) {
         Bundle b = new Bundle();
-        b.putString("Exception: ", message);
+        b.putString("error", message);
         receiver.send(FeedResultReceiver.EXCEPTION_ERROR, b);
     }
 
@@ -125,7 +132,7 @@ public class FeedUpdater extends IntentService {
         }
 
         @Override
-        public void startElement(String string, String localName, String qName, Attributes attributes) {
+        public void startElement(String string, String localName, String qName, Attributes attributes) throws SAXException {
             if (qName.equals("item") || qName.equals("entry")) {
                 currentValues = new ContentValues();
             } else if (qName.equals("title") || qName.equals("description") || qName.equals("link")) {
@@ -138,11 +145,13 @@ public class FeedUpdater extends IntentService {
         }
 
         @Override
-        public void endElement(String string, String localName, String qName) {
+        public void endElement(String string, String localName, String qName) throws SAXException {
             saveText = false;
             if (currentValues != null) {
                 if (localName.equals("title")) {
                     currentValues.put("title", text.trim());
+                } else if (localName.equals("description")) {
+                    currentValues.put("description", text.trim());
                 } else if (localName.equals("link") && !text.isEmpty()) {
                     currentValues.put("url", text);
                 } else if (localName.equals("item") || localName.equals("entry")) {
@@ -168,7 +177,7 @@ public class FeedUpdater extends IntentService {
         }
 
         @Override
-        public void characters(char[] ch, int start, int length) {
+        public void characters(char[] ch, int start, int length) throws SAXException {
             String characters = new String(ch, start, length);
             if (saveText) text += characters;
         }

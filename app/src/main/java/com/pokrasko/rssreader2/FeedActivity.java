@@ -10,10 +10,9 @@ import android.content.Loader;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-/*import android.view.Menu;
-import android.view.MenuItem;*/
+import android.text.Editable;
+import android.text.InputType;
 import android.view.ContextMenu;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -40,7 +39,7 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
         dialog = createDialog();
 
-        listView = (ListView) findViewById(R.id.feedListView);
+        listView = (ListView) findViewById(android.R.id.list);
         emptyView = (TextView) findViewById(R.id.noFeeds);
 
         receiver = new FeedResultReceiver(new Handler(), this);
@@ -80,7 +79,7 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<FeedList> loader, FeedList list) {
-        if (adapter.getCount() == 0) {
+        if (list.size() == 0) {
             listView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
         } else {
@@ -88,6 +87,7 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
             listView.setVisibility(View.VISIBLE);
         }
         adapter = new FeedAdapter(list);
+        setListAdapter(adapter);
     }
 
     @Override
@@ -95,12 +95,12 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
         listView.setVisibility(View.GONE);
         emptyView.setVisibility(View.VISIBLE);
         adapter = new FeedAdapter(new FeedList());
+        setListAdapter(adapter);
     }
 
 
     private void addFeed(String URL) {
         Intent intent = new Intent(this, FeedUpdater.class);
-        intent.putExtra("new_feed", true);
         intent.putExtra("url", URL);
         intent.putExtra("receiver", receiver);
         startService(intent);
@@ -108,13 +108,17 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
     private Dialog createDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        LayoutInflater inflater = this.getLayoutInflater();
 
-        builder.setView(inflater.inflate(R.layout.feed_add_dialog, null))
-               .setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
+        final EditText urlView = new EditText(this);
+        urlView.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
+
+        builder.setTitle(R.string.add_feed)
+               .setView(urlView);
+        builder.setPositiveButton(R.string.OK, new DialogInterface.OnClickListener() {
                    @Override
                    public void onClick(DialogInterface dialog, int which) {
-                       String URL = ((EditText) findViewById(R.id.newFeedURL)).getText().toString();
+                       Editable text = urlView.getText();
+                       String URL = text.toString();
                        addFeed(URL);
                    }
                })
@@ -170,6 +174,6 @@ public class FeedActivity extends ListActivity implements LoaderManager.LoaderCa
 
 
     void onUpdatedFeed() {
-        getLoaderManager().initLoader(0, null, this);
+        getLoaderManager().restartLoader(0, null, this);
     }
 }

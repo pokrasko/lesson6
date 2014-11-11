@@ -22,16 +22,28 @@ public class PostLoader extends AsyncTaskLoader<PostList> {
         Cursor cursor = getContext().getContentResolver().query(FeedContentProvider.CONTENT_POSTS_URI,
                 projection, selection, null, null);
 
+        cursor.moveToFirst();
         while (!cursor.isAfterLast()) {
-            long id = cursor.getInt(cursor.getColumnIndexOrThrow("id"));
-            String title = cursor.getString(cursor.getColumnIndexOrThrow("title"));
-            String description = cursor.getString(cursor.getColumnIndexOrThrow("description"));
-            String url = cursor.getString(cursor.getColumnIndexOrThrow("url"));
+            long id = cursor.getInt(0);
+            String title = cursor.getString(1);
+            String description = cursor.getString(2);
+            String url = cursor.getString(3);
             list.add(new Post(id, title, description, url));
 
             cursor.moveToNext();
         }
+        cursor.close();
 
         return list;
+    }
+
+    @Override
+    protected void onStartLoading() {
+        forceLoad();
+    }
+
+    @Override
+    protected void onStopLoading() {
+        cancelLoad();
     }
 }

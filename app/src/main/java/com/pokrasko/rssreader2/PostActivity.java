@@ -4,13 +4,13 @@ import android.app.ListActivity;
 import android.app.LoaderManager;
 import android.content.Intent;
 import android.content.Loader;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -24,6 +24,7 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
     TextView descriptionView;
     ListView listView;
     TextView emptyView;
+    Button refreshButton;
 
     private PostAdapter adapter;
 
@@ -39,9 +40,17 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
 
         receiver = new FeedResultReceiver(new Handler(), this);
 
-        listView = (ListView) findViewById(R.id.feedListView);
+        listView = (ListView) findViewById(android.R.id.list);
         descriptionView = (TextView) findViewById(R.id.descriptionView);
         emptyView = (TextView) findViewById(R.id.noPosts);
+        refreshButton = (Button) findViewById(R.id.refreshButton);
+
+        refreshButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onRefresh();
+            }
+        });
 
         setTitle(title);
         descriptionView.setText(description);
@@ -64,7 +73,7 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
 
     @Override
     public void onLoadFinished(Loader<PostList> loader, PostList list) {
-        if (adapter.getCount() == 0) {
+        if (list.size() == 0) {
             listView.setVisibility(View.GONE);
             emptyView.setVisibility(View.VISIBLE);
         } else {
@@ -72,6 +81,7 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
             listView.setVisibility(View.VISIBLE);
         }
         adapter = new PostAdapter(list);
+        setListAdapter(adapter);
     }
 
     @Override
@@ -79,6 +89,7 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
         listView.setVisibility(View.GONE);
         emptyView.setVisibility(View.VISIBLE);
         adapter = new PostAdapter(new PostList());
+        setListAdapter(adapter);
     }
 
 
@@ -115,7 +126,7 @@ public class PostActivity extends ListActivity implements LoaderManager.LoaderCa
     }
 
     void onUpdatedFeed() {
-        getLoaderManager().initLoader(0, null, this);
+        getLoaderManager().restartLoader(0, null, this);
     }
 
     public void showMore(String title, String url) {

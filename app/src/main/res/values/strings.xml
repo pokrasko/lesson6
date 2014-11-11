@@ -9,5 +9,7 @@
     <string name="OK">OK</string>
     <string name="cancel">Cancel</string>
     <string name="full_article">More...</string>
+    <string name="no_feeds">There is no feeds.</string>
+    <string name="no_posts">There is no posts in the feed.</string>
 
 </resources>

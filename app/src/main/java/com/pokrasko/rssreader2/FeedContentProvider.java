@@ -153,7 +153,7 @@ public class FeedContentProvider extends ContentProvider {
                 " (" + ID_FIELD + " INTEGER PRIMARY KEY AUTOINCREMENT" +
                 ", " + TITLE_FIELD + " TEXT NOT NULL" +
                 ", " + DESCRIPTION_FIELD + " TEXT NOT NULL" +
-                ", " + URL_FIELD + " TEXT NOT NULL UNIQUE" +
+                ", " + URL_FIELD + " TEXT NOT NULL" +
                 ", " + FEED_ID_FIELD + " INTEGER REFERENCES feeds(id) ON DELETE CASCADE);");
         }
 
