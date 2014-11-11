@@ -44,6 +44,8 @@ public class PostAdapter extends BaseAdapter {
         final WebView description = (WebView) view.findViewById(R.id.postDescriptionView);
         Button fullButton = (Button) view.findViewById(R.id.fullButton);
 
+        description.setVisibility(post.isVisible() ? View.VISIBLE : View.GONE);
+
         title.setText(post.getTitle());
         description.loadData(post.getDescription(), "text/html; charset=utf-8", null);
 
