@@ -151,7 +151,7 @@ public class FeedContentProvider extends ContentProvider {
             db.execSQL("CREATE TABLE " + POSTS_TABLE +
                 " (" + ID_FIELD + " INTEGER PRIMARY KEY AUTOINCREMENT" +
                 ", " + TITLE_FIELD + " TEXT NOT NULL" +
-                ", " + DESCRIPTION_FIELD + " TEXT NOT NULL" +
+                ", " + DESCRIPTION_FIELD + " TEXT" +
                 ", " + URL_FIELD + " TEXT NOT NULL" +
                 ", " + FEED_ID_FIELD + " INTEGER REFERENCES feeds(id) ON DELETE CASCADE);");
         }
